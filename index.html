@@ -140,9 +140,7 @@
     </div>
 
     <script>
-        const API_KEY = 'AIzaSyAXXsJMPGVn3nh7e2vY3_N2mFkE5HMQRy8';
-        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
+ 
         // Auto-load when page loads
         window.addEventListener('load', function() {
             fetchStatus();
@@ -193,45 +191,41 @@ CRITICAL REQUIREMENTS:
         }
 
         async function fetchStatus() {
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '<div class="loading">Fetching latest analysis...</div>';
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = '<div class="loading">Fetching latest analysis...</div>';
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-goog-api-key': API_KEY
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: createPrompt()
-                            }]
-                        }]
-                    })
-                });
+    try {
+        const response = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: createPrompt()
+                    }]
+                }]
+            })
+        });
 
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text;
-                
-                parseAndDisplayResponse(text);
-
-            } catch (error) {
-                contentDiv.innerHTML = `
-                    <div class="error">
-                        <strong>Error:</strong> ${error.message}
-                        <br><br>
-                        Please check your API key and internet connection.
-                    </div>
-                `;
-            }
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
         }
 
+        const data = await response.json();
+        const text = data.candidates[0].content.parts[0].text;
+        
+        parseAndDisplayResponse(text);
+
+    } catch (error) {
+        contentDiv.innerHTML = `
+            <div class="error">
+                <strong>Error:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
         function parseAndDisplayResponse(text) {
             try {
                 // Extract answer
