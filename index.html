@@ -236,28 +236,39 @@ CRITICAL REQUIREMENTS:
             try {
                 // Extract answer
                 const answerMatch = text.match(/ANSWER:\s*(YES|NO)\s*(\d+)%/i);
-                const answer = answerMatch ? `${answerMatch[1]} ${answerMatch[2]}%` : 'NO DATA';
+                if (!answerMatch) {
+                    throw new Error('AI did not follow required format');
+                }
+                const answer = `${answerMatch[1]} ${answerMatch[2]}%`;
 
                 // Extract explanation
                 const explanationMatch = text.match(/EXPLANATION:\s*([\s\S]*?)(?=SOURCES:|$)/i);
-                const explanation = explanationMatch ? explanationMatch[1].trim() : 'No explanation provided.';
+                if (!explanationMatch) {
+                    throw new Error('AI did not provide explanation in required format');
+                }
+                const explanation = explanationMatch[1].trim();
 
                 // Extract sources
                 const sourcesMatch = text.match(/SOURCES:\s*([\s\S]*?)$/i);
-                const sourcesText = sourcesMatch ? sourcesMatch[1].trim() : '';
+                if (!sourcesMatch) {
+                    throw new Error('AI did not provide sources in required format');
+                }
+                const sourcesText = sourcesMatch[1].trim();
                 
                 const sources = [];
-                if (sourcesText) {
-                    const sourceLines = sourcesText.split('\n').filter(line => line.trim());
-                    sourceLines.forEach(line => {
-                        const sourceMatch = line.match(/SOURCE:\s*(.*?)\s*\|\s*TIMESTAMP:\s*(.*?)$/i);
-                        if (sourceMatch) {
-                            sources.push({
-                                url: sourceMatch[1].trim(),
-                                timestamp: sourceMatch[2].trim()
-                            });
-                        }
-                    });
+                const sourceLines = sourcesText.split('\n').filter(line => line.trim());
+                sourceLines.forEach(line => {
+                    const sourceMatch = line.match(/SOURCE:\s*(.*?)\s*\|\s*TIMESTAMP:\s*(.*?)$/i);
+                    if (sourceMatch) {
+                        sources.push({
+                            url: sourceMatch[1].trim(),
+                            timestamp: sourceMatch[2].trim()
+                        });
+                    }
+                });
+
+                if (sources.length === 0) {
+                    throw new Error('AI did not provide sources in correct format');
                 }
 
                 displayResults(answer, explanation, sources);
@@ -276,17 +287,12 @@ CRITICAL REQUIREMENTS:
         function displayResults(answer, explanation, sources) {
             const contentDiv = document.getElementById('content');
             
-            let sourcesHtml = '';
-            if (sources.length > 0) {
-                sourcesHtml = sources.map(source => `
-                    <div class="source-item">
-                        <a href="${source.url}" target="_blank" class="source-url">${source.url}</a>
-                        <div class="source-timestamp">Published/Updated: ${source.timestamp}</div>
-                    </div>
-                `).join('');
-            } else {
-                sourcesHtml = '<div class="source-item">No sources provided in expected format</div>';
-            }
+            let sourcesHtml = sources.map(source => `
+                <div class="source-item">
+                    <a href="${source.url}" target="_blank" class="source-url">${source.url}</a>
+                    <div class="source-timestamp">Published/Updated: ${source.timestamp}</div>
+                </div>
+            `).join('');
 
             contentDiv.innerHTML = `
                 <div class="status-answer">${answer}</div>
