@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russia-Ukraine War Status Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .status-answer {
+            font-size: 8rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 40px 0;
+            padding: 40px;
+            background: white;
+            border: 2px solid #333;
+        }
+
+        .summary {
+            background: white;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+
+        .summary h2 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .sources {
+            background: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+
+        .sources h2 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .source-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            background: #fafafa;
+        }
+
+        .source-url {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .source-url:hover {
+            text-decoration: underline;
+        }
+
+        .source-timestamp {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .refresh-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .refresh-btn:hover {
+            background: #555;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border: 1px solid #ef5350;
+            margin: 20px 0;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Russia-Ukraine War Status Tracker</h1>
+            <p>Unbiased analysis of current military situation</p>
+        </div>
+
+        <button class="refresh-btn" onclick="fetchStatus()">Get Latest Status</button>
+
+        <div id="content">
+            <div class="loading">Loading latest war status analysis...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyAXXsJMPGVn3nh7e2vY3_N2mFkE5HMQRy8';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+        // Auto-load when page loads
+        window.addEventListener('load', function() {
+            fetchStatus();
+        });
+
+        function getCurrentDateTime() {
+            return new Date().toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+
+        function createPrompt() {
+            const currentDateTime = getCurrentDateTime();
+            return `STRICT INSTRUCTIONS - YOU MUST FOLLOW THIS EXACT FORMAT:
+
+Current date and time: ${currentDateTime}
+
+Search the internet for the most recent and reliable information about the Russia-Ukraine war military situation. Based on your analysis, answer this question: "Is Russia currently winning the Russia-Ukraine war?"
+
+YOU MUST FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
+
+ANSWER: [YES/NO/UNCLEAR]
+
+EXPLANATION:
+[Write exactly 100 words explaining your assessment. Be objective and unbiased. Focus on military territorial control, momentum, and strategic position.]
+
+SOURCES:
+[List 3-5 reliable sources you used, each on a new line in this exact format:]
+SOURCE: [Full URL] | TIMESTAMP: [Date of publication or last update]
+SOURCE: [Full URL] | TIMESTAMP: [Date of publication or last update]
+SOURCE: [Full URL] | TIMESTAMP: [Date of publication or last update]
+
+CRITICAL REQUIREMENTS:
+- Start with "ANSWER:" followed by only YES, NO, or UNCLEAR
+- Keep explanation to exactly 100 words
+- Provide real, working URLs for sources
+- Include actual timestamps for when sources were published/updated
+- Be completely unbiased and objective
+- Base assessment on current territorial control, military momentum, and strategic position
+- Do not deviate from this format under any circumstances`;
+        }
+
+        async function fetchStatus() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<div class="loading">Fetching latest analysis...</div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': API_KEY
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: createPrompt()
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                
+                parseAndDisplayResponse(text);
+
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}
+                        <br><br>
+                        Please check your API key and internet connection.
+                    </div>
+                `;
+            }
+        }
+
+        function parseAndDisplayResponse(text) {
+            try {
+                // Extract answer
+                const answerMatch = text.match(/ANSWER:\s*(YES|NO|UNCLEAR)/i);
+                const answer = answerMatch ? answerMatch[1].toUpperCase() : 'UNCLEAR';
+
+                // Extract explanation
+                const explanationMatch = text.match(/EXPLANATION:\s*([\s\S]*?)(?=SOURCES:|$)/i);
+                const explanation = explanationMatch ? explanationMatch[1].trim() : 'No explanation provided.';
+
+                // Extract sources
+                const sourcesMatch = text.match(/SOURCES:\s*([\s\S]*?)$/i);
+                const sourcesText = sourcesMatch ? sourcesMatch[1].trim() : '';
+                
+                const sources = [];
+                if (sourcesText) {
+                    const sourceLines = sourcesText.split('\n').filter(line => line.trim());
+                    sourceLines.forEach(line => {
+                        const sourceMatch = line.match(/SOURCE:\s*(.*?)\s*\|\s*TIMESTAMP:\s*(.*?)$/i);
+                        if (sourceMatch) {
+                            sources.push({
+                                url: sourceMatch[1].trim(),
+                                timestamp: sourceMatch[2].trim()
+                            });
+                        }
+                    });
+                }
+
+                displayResults(answer, explanation, sources);
+
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        <strong>Parsing Error:</strong> Unable to parse AI response format.
+                        <br><br>
+                        Raw response: ${text.substring(0, 500)}...
+                    </div>
+                `;
+            }
+        }
+
+        function displayResults(answer, explanation, sources) {
+            const contentDiv = document.getElementById('content');
+            
+            let sourcesHtml = '';
+            if (sources.length > 0) {
+                sourcesHtml = sources.map(source => `
+                    <div class="source-item">
+                        <a href="${source.url}" target="_blank" class="source-url">${source.url}</a>
+                        <div class="source-timestamp">Published/Updated: ${source.timestamp}</div>
+                    </div>
+                `).join('');
+            } else {
+                sourcesHtml = '<div class="source-item">No sources provided in expected format</div>';
+            }
+
+            contentDiv.innerHTML = `
+                <div class="status-answer">${answer}</div>
+                
+                <div class="summary">
+                    <h2>Analysis Summary</h2>
+                    <p>${explanation}</p>
+                </div>
+
+                <div class="sources">
+                    <h2>Sources</h2>
+                    ${sourcesHtml}
+                </div>
+
+                <div class="last-updated">
+                    Last updated: ${getCurrentDateTime()}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
