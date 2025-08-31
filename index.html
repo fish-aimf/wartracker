@@ -235,7 +235,7 @@ CRITICAL REQUIREMENTS:
         function parseAndDisplayResponse(text) {
             try {
                 // Extract answer
-                const answerMatch = text.match(/ANSWER:\s*(YES|NO)\s*(\d+)%/i);
+                const answerMatch = text.match(/ANSWER:\s*\[?(YES|NO)\s*(\d+)%\]?/i);
                 if (!answerMatch) {
                     throw new Error('AI did not follow required format');
                 }
