@@ -132,12 +132,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Russia-Ukraine War Status Tracker</h1>
-            <p>Unbiased analysis of current military situation</p>
-        </div>
 
-        <button class="refresh-btn" onclick="fetchStatus()">Get Latest Status</button>
 
         <div id="content">
             <div class="loading">Loading latest war status analysis...</div>
@@ -175,7 +170,7 @@ Search the internet for the most recent and reliable information about the Russi
 
 YOU MUST FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
-ANSWER: [YES/NO/UNCLEAR]
+ANSWER: [YES XX%/NO XX%]
 
 EXPLANATION:
 [Write exactly 100 words explaining your assessment. Be objective and unbiased. Focus on military territorial control, momentum, and strategic position.]
@@ -187,7 +182,8 @@ SOURCE: [Full URL] | TIMESTAMP: [Date of publication or last update]
 SOURCE: [Full URL] | TIMESTAMP: [Date of publication or last update]
 
 CRITICAL REQUIREMENTS:
-- Start with "ANSWER:" followed by only YES, NO, or UNCLEAR
+- Start with "ANSWER:" followed by only YES or NO with a confidence percentage (e.g., "YES 75%" or "NO 85%")
+- DO NOT use "UNCLEAR" - you must choose YES or NO with your confidence level
 - Keep explanation to exactly 100 words
 - Provide real, working URLs for sources
 - Include actual timestamps for when sources were published/updated
@@ -239,8 +235,8 @@ CRITICAL REQUIREMENTS:
         function parseAndDisplayResponse(text) {
             try {
                 // Extract answer
-                const answerMatch = text.match(/ANSWER:\s*(YES|NO|UNCLEAR)/i);
-                const answer = answerMatch ? answerMatch[1].toUpperCase() : 'UNCLEAR';
+                const answerMatch = text.match(/ANSWER:\s*(YES|NO)\s*(\d+)%/i);
+                const answer = answerMatch ? `${answerMatch[1]} ${answerMatch[2]}%` : 'NO DATA';
 
                 // Extract explanation
                 const explanationMatch = text.match(/EXPLANATION:\s*([\s\S]*?)(?=SOURCES:|$)/i);
